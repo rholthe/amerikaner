@@ -3,7 +3,7 @@
 import Link from "next/link";
 import useSWR from "swr";
 import { useState } from "react";
-import { ArrowLeft, Check, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { api, hentJson } from "@/lib/api";
 import { spillerFarge } from "@/lib/palette";
 import type { SpillerDto } from "@/lib/typer";
@@ -126,9 +126,13 @@ export default function SpillereSide() {
                     {s.name}
                   </button>
 
-                  <span className="text-xs text-muted tabular-nums">
-                    {s.givCount} giv
-                  </span>
+                  <Link
+                    href={`/spillere/${s.id}`}
+                    className="text-xs text-muted hover:text-gold tabular-nums flex items-center gap-1"
+                    title={`Profilen til ${s.name}`}
+                  >
+                    {s.givCount} giv <ChevronRight size={13} />
+                  </Link>
 
                   <button
                     onClick={() =>

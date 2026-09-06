@@ -32,7 +32,7 @@ export const config = {
   matcher: [
     "/kveld/:path*",
     "/registrer/:path*",
-    "/spillere/:path*",
+    "/spillere",
     "/sesonger/:path*",
     "/api/kveld/:path*",
     "/api/runde/:path*",

@@ -4,9 +4,10 @@ import { ArrowLeft, ChevronRight, Trophy } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatDato } from "@/lib/dates";
 import { hentSesong, kveldsvinner } from "@/lib/sesong";
-import { kåringer, spillerStatistikk } from "@/lib/stats";
+import { kåringer, makkerPar, spillerStatistikk } from "@/lib/stats";
 import { spillerFarge, spillerTekstFarge } from "@/lib/palette";
 import Statistikk from "@/components/kveld/Statistikk";
+import Makkermatrise from "@/components/Makkermatrise";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,8 @@ export default async function SesongSide({ params }: { params: Promise<{ id: str
     spillerStatistikk(sesong.giv, sesong.tabell.map((r) => r.playerId), sesong.runderVunnet).values(),
   ).filter((k) => k.nøkkel !== "runder");
   const spillere = sesong.tabell.map((r) => ({ id: r.playerId, name: r.name }));
+  const par = [...makkerPar(sesong.giv)].map(([nøkkel, v]) => ({ nøkkel, ...v }));
+  const matrise = [...spillere].sort((a, b) => a.id - b.id);
   const navn = (pid: number) => spillere.find((s) => s.id === pid)?.name ?? "?";
 
   return (
@@ -74,12 +77,13 @@ export default async function SesongSide({ params }: { params: Promise<{ id: str
               {sesong.tabell.map((r, i) => {
                 const pall = i < 3 && r.runderVunnet > 0;
                 return (
-                  <li
-                    key={r.playerId}
-                    className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 ${
+                  <li key={r.playerId}>
+                  <Link
+                    href={`/spillere/${r.playerId}`}
+                    className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition ${
                       i === 0 && pall
-                        ? "border-gold/50 bg-gold/10"
-                        : "border-line bg-surface"
+                        ? "border-gold/50 bg-gold/10 hover:bg-gold/15"
+                        : "border-line bg-surface hover:bg-surface-2"
                     }`}
                   >
                     <span className="w-7 shrink-0 text-center text-lg">
@@ -121,6 +125,8 @@ export default async function SesongSide({ params }: { params: Promise<{ id: str
                     <span className="text-2xl font-bold tabular-nums shrink-0">
                       {r.runderVunnet}
                     </span>
+                    <ChevronRight size={16} className="text-muted shrink-0" />
+                  </Link>
                   </li>
                 );
               })}
@@ -133,6 +139,11 @@ export default async function SesongSide({ params }: { params: Promise<{ id: str
               <Statistikk kåringer={kår} spillere={spillere} alleIder={alleIder} />
             </section>
           )}
+
+          <section className="mb-10">
+            <h2 className="merkelapp mb-3">Makkermatrise</h2>
+            <Makkermatrise spillere={matrise} alleIder={alleIder} par={par} />
+          </section>
 
           <section>
             <h2 className="merkelapp mb-3">Alle kvelder</h2>

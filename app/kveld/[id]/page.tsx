@@ -87,10 +87,11 @@ export default async function KveldHistorikk({
           {rangert.map((s) => {
             const seire = vunnet[s.id] ?? 0;
             return (
-              <li
-                key={s.id}
-                className="flex items-center gap-3 kort px-4 py-3"
-              >
+              <li key={s.id}>
+                <Link
+                  href={`/spillere/${s.id}`}
+                  className="flex items-center gap-3 kort px-4 py-3 hover:bg-surface-2 transition"
+                >
                 <span
                   aria-hidden
                   className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -103,6 +104,7 @@ export default async function KveldHistorikk({
                 <span className="tabular-nums font-semibold text-gold w-6 text-right">
                   {seire}
                 </span>
+                </Link>
               </li>
             );
           })}

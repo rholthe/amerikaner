@@ -31,9 +31,10 @@ Etter prøvekvelden 5. september ble to ting rettet og én ting delt i to:
   som en serverside trenger, skal bo i en komponentfil.**
 - **Én skjerm ble til to**, se `/kveld` og `/registrer` under.
 
-**Fase 2 er påbegynt:** sesonger med egen sesongside står (kapittel 4 og
-`lib/sesong.ts`). Det som gjenstår er grafer på `/oversikt` og spillerprofiler
-med makkermatrise. CSV-eksport er droppet. **Fase 3 (James) er ikke påbegynt.**
+**Fase 2 er langt på vei:** sesonger med egen sesongside (`lib/sesong.ts`) og
+spillerprofiler med makkermatrise (`lib/spiller.ts`) står. Det som gjenstår er
+grafene på `/oversikt` og merker. CSV-eksport er droppet.
+**Fase 3 (James) er ikke påbegynt.**
 
 Koden ligger på **`git@github.com:rholthe/amerikaner.git`**, gren `main`.
 Serveren er en ren kopi av GitHub – man redigerer aldri filer der.
@@ -230,7 +231,7 @@ for å forbedre promptet; kan tømmes fritt (se personvern).
 | `/oversikt` | Kveldshistorikk og grafer |
 | `/oversikt?visning=graf` | Grafer: akkumulerte runder, formkurve, makkermatrise |
 | `/sesong/[id]` | Sesongkåring – mester, pallen, kåringer |
-| `/spillere/[id]` | Spillerprofil: karrieretall, rekorder, merker |
+| `/spillere/[id]` | **Spillerprofil**: karrieretall, rekorder, makkermatrise (åpen) |
 | `/spillere` | Administrer spillere (aktiv/inaktiv, nytt navn) |
 
 **Sesonger fungerer som i pokergutta:** `Season` med start- og sluttdato,
@@ -484,8 +485,10 @@ Felles PIN **1975**, samme som `idiot` – satt i `APP_PIN` i `.env`, som ikke e
 committet. (`.env.example` har en plassholder, ikke den ekte verdien.) Endres
 med `docker compose restart amerikaner` etterpå.
 
-`proxy.ts` beskytter `/kveld`, `/registrer`, `/spillere` og skrivende
-API-ruter. Cookien inneholder SHA-256-hashen av PIN-en
+`proxy.ts` beskytter `/kveld`, `/registrer`, `/sesonger`, `/spillere` og
+skrivende API-ruter. Merk at matcheren er `"/spillere"` uten `:path*`:
+administrasjonen er bak PIN, men spillerprofilene på `/spillere/[id]` er
+lesende sider og skal være åpne. Cookien inneholder SHA-256-hashen av PIN-en
 (`lib/pinHash.ts`-mønsteret fra pokergutta – edge-trygt via Web Crypto), aldri
 PIN-en i klartekst. Lesende sider (`/oversikt`, spillerprofiler) er åpne.
 
@@ -565,13 +568,16 @@ Kåringene som finnes nå:
 | Runder vunnet | Runder til 52 |
 
 Vises på forsiden (gjennom tidene), på begge kveldsskjermene (kveld eller
-gjennom tidene) og på `/kveld/[id]` (den kvelden). `makkerPar()` finnes også, og
-er grunnlaget for makkermatrisen i fase 2.
+gjennom tidene), på `/kveld/[id]` (den kvelden) og på `/sesong/[id]`.
 
-**Fase 2 mangler fortsatt:** formkurve og grafer, spillerprofiler med
-makkermatrise, rekorder og merker. Sesongtabellen og kåringene per sesong står
-(`lib/sesong.ts`). Ingenting av det som gjenstår krever at kåringene skrives om
-– de trenger bare en filtrert liste giv.
+**Makkermatrisen** (`makkerPar()` + `components/Makkermatrise.tsx`) står på
+sesongsiden og på hver spillerprofil. Den er en matrise og ikke en liste fordi
+retningen betyr noe: å rope noen er et valg, å bli ropt er det ikke – `3:4` og
+`4:3` er to forskjellige tall. Cellen viser *klart av ganger ropt*, og bakgrunnen
+er grønnere jo oftere paret kom i mål. De tomme rutene er halve poenget.
+
+**Fase 2 mangler fortsatt:** formkurve og grafer på `/oversikt`, og merker.
+Sesongtabell, kåringer per sesong og spillerprofiler står.
 
 ---
 
@@ -793,9 +799,10 @@ Appen står på https://am.pokergutta.no og kan brukes på neste spillekveld.
 11. ✅ `Season`-administrasjon på `/sesonger`, med automatisk tilhørighet.
 12. ✅ `/sesong/[id]`: sesongtabell på vunne runder, kåringer, alle kvelder og
     runder. Sesongene listes på forsiden, og kvelden lenker til sesongen sin.
-13. `/oversikt` med grafer: formkurve og akkumulerte vunne runder.
-14. Spillerprofiler `/spillere/[id]`: makkermatrise (`makkerPar()` finnes),
-    rekorder og merker.
+13. ✅ Spillerprofiler `/spillere/[id]`: karrieretall, meldingsstatistikk,
+    rekorder, sesong for sesong, makkermatrise og alle kvelder med plassering.
+14. `/oversikt` med grafer: formkurve og akkumulerte vunne runder.
+15. Merker/achievements etter mønsteret i `pokergutta/lib/achievements.ts`.
 
 CSV-eksport er **droppet** – ingen har bruk for tallene utenfor appen.
 
