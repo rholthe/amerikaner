@@ -31,9 +31,9 @@ Etter prøvekvelden 5. september ble to ting rettet og én ting delt i to:
   som en serverside trenger, skal bo i en komponentfil.**
 - **Én skjerm ble til to**, se `/kveld` og `/registrer` under.
 
-Fase 2 (sesonger, grafer og CSV) og fase 3 (James) er **ikke påbegynt**, men
-kåringene i `lib/stats.ts` er skrevet, testet mot ekte data og i bruk fire
-steder – de trenger bare et sesongfilter for å dekke fase 2.
+**Fase 2 er påbegynt:** sesonger med egen sesongside står (kapittel 4 og
+`lib/sesong.ts`). Det som gjenstår er grafer på `/oversikt` og spillerprofiler
+med makkermatrise. CSV-eksport er droppet. **Fase 3 (James) er ikke påbegynt.**
 
 Koden ligger på **`git@github.com:rholthe/amerikaner.git`**, gren `main`.
 Serveren er en ren kopi av GitHub – man redigerer aldri filer der.
@@ -227,7 +227,7 @@ for å forbedre promptet; kan tømmes fritt (se personvern).
 | `/kveld/[id]` | Én spilt kveld: runder, giv og kveldens kåringer |
 | `/sesong/[id]` | **Sesongside** – tabell, kåringer, alle kvelder og runder |
 | `/sesonger` | Administrer sesonger (PIN-beskyttet) |
-| `/oversikt` | Kveldshistorikk og CSV-eksport |
+| `/oversikt` | Kveldshistorikk og grafer |
 | `/oversikt?visning=graf` | Grafer: akkumulerte runder, formkurve, makkermatrise |
 | `/sesong/[id]` | Sesongkåring – mester, pallen, kåringer |
 | `/spillere/[id]` | Spillerprofil: karrieretall, rekorder, merker |
@@ -515,7 +515,6 @@ Alt under `/api/kveld`, `/api/runde` og `/api/spillere` er PIN-beskyttet av
 | 1 | GET | `/api/statistikk` | Karrieretall for alle spillere (åpen, lesende) |
 | 2 | GET/POST | `/api/sesonger` | Liste og opprett sesong |
 | 2 | PATCH/DELETE | `/api/sesonger/[id]` | Endre datoer/navn/aktiv, eller slett |
-| 2 | GET | `/api/eksport/[seasonId]` | CSV, norsk Excel-format |
 | 3 | GET | `/api/soniox-token` | Kortlivet Soniox-token + EU-ws-URL |
 | 3 | POST | `/api/james` | `{transcript, matchId}` → liste med forslag |
 
@@ -569,9 +568,10 @@ Vises på forsiden (gjennom tidene), på begge kveldsskjermene (kveld eller
 gjennom tidene) og på `/kveld/[id]` (den kvelden). `makkerPar()` finnes også, og
 er grunnlaget for makkermatrisen i fase 2.
 
-**Fase 2 mangler fortsatt:** sesongfilter, sesongtabell, formkurve, grafer,
-CSV-eksport, spillerprofiler og merker. Ingenting av det krever at kåringene
-skrives om – de trenger bare en filtrert liste giv.
+**Fase 2 mangler fortsatt:** formkurve og grafer, spillerprofiler med
+makkermatrise, rekorder og merker. Sesongtabellen og kåringene per sesong står
+(`lib/sesong.ts`). Ingenting av det som gjenstår krever at kåringene skrives om
+– de trenger bare en filtrert liste giv.
 
 ---
 
@@ -793,10 +793,11 @@ Appen står på https://am.pokergutta.no og kan brukes på neste spillekveld.
 11. ✅ `Season`-administrasjon på `/sesonger`, med automatisk tilhørighet.
 12. ✅ `/sesong/[id]`: sesongtabell på vunne runder, kåringer, alle kvelder og
     runder. Sesongene listes på forsiden, og kvelden lenker til sesongen sin.
-13. CSV-eksport.
-14. `/oversikt` med grafer: formkurve og akkumulerte vunne runder.
-15. Spillerprofiler `/spillere/[id]`: makkermatrise (`makkerPar()` finnes),
+13. `/oversikt` med grafer: formkurve og akkumulerte vunne runder.
+14. Spillerprofiler `/spillere/[id]`: makkermatrise (`makkerPar()` finnes),
     rekorder og merker.
+
+CSV-eksport er **droppet** – ingen har bruk for tallene utenfor appen.
 
 Kåringene i `lib/stats.ts` dekker allerede tallene – det som mangler er
 grafene og spillerprofilene.
