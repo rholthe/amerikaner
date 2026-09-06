@@ -19,6 +19,7 @@ export interface StatGiv {
   partnerId: number | null;
   bid: number | null;
   isAmerikaner: boolean;
+  isForced: boolean;
   madeIt: boolean | null;
   scores: { playerId: number; points: number; tricks: number | null }[];
 }
@@ -33,6 +34,9 @@ export interface SpillerStat {
   meldinger: number;
   meldingerKlart: number;
   meldingerBet: number;
+  /** Tvungne giv man selv måtte melde. Egen kolonne fordi de ikke er valgt. */
+  tvungne: number;
+  tvungneKlart: number;
   /** Sum av tallmeldinger, for snittet. Amerikaner har ingen stikktall. */
   meldingSum: number;
   meldingerMedTall: number;
@@ -68,6 +72,8 @@ export function tomStat(playerId: number): SpillerStat {
     meldinger: 0,
     meldingerKlart: 0,
     meldingerBet: 0,
+    tvungne: 0,
+    tvungneKlart: 0,
     meldingSum: 0,
     meldingerMedTall: 0,
     meldtAlene: 0,
@@ -132,10 +138,16 @@ export function spillerStatistikk(
         if (klart) s.meldingerKlart += 1;
         else s.meldingerBet += 1;
         if (g.partnerId == null) s.meldtAlene += 1;
+        if (g.isForced) {
+          s.tvungne += 1;
+          if (klart) s.tvungneKlart += 1;
+        }
         if (g.isAmerikaner) {
           s.amerikanereMeldt += 1;
           if (klart) s.amerikanereKlart += 1;
-        } else if (g.bid != null) {
+        } else if (g.bid != null && !g.isForced) {
+          // Tvungne meldinger holdes utenfor snittet: snittmeldingen skal si
+          // hvor høyt man tør å melde, ikke hva husreglene tvang en til.
           s.meldingSum += g.bid;
           s.meldingerMedTall += 1;
         }
@@ -282,6 +294,17 @@ export function kåringer(stat: Iterable<SpillerStat>): Kåring[] {
             verdi: s.makkerTapt,
             visning: `−${s.makkerTapt}`,
             hint: `${s.makkerBet} bet av ${s.makkerGanger}`,
+          },
+    ),
+
+    lag("tvungne", "Tvungne giv klart", "Ganger man kom i mål med en melding man ikke valgte selv.", alle, (s) =>
+      s.tvungne === 0
+        ? null
+        : {
+            playerId: s.playerId,
+            verdi: s.tvungneKlart,
+            visning: `${s.tvungneKlart}`,
+            hint: `av ${antall(s.tvungne, "tvungen giv", "tvungne giv")}`,
           },
     ),
 

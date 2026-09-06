@@ -97,6 +97,9 @@ model Deal {
   tricksWon    Int?
   trickCount   Int?
   isAmerikaner Boolean  @default(false)
+  /// Tvungen giv: meldingen var bestemt på forhånd, ikke valgt. Lagres fordi
+  /// den skiller det man våget fra det man måtte – se lib/scoring.ts.
+  isForced     Boolean  @default(false)
   madeIt       Boolean?
   note         String?
   source       String   @default("manuell")

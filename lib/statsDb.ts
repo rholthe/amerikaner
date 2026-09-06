@@ -31,6 +31,7 @@ export async function hentTotalStatistikk(): Promise<TotalStatistikk> {
     partnerId: d.partnerId,
     bid: d.bid,
     isAmerikaner: d.isAmerikaner,
+    isForced: d.isForced,
     madeIt: d.madeIt,
     scores: d.scores.map((s) => ({
       playerId: s.playerId,

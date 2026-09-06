@@ -262,6 +262,7 @@ export default function StorskjermSide() {
             startVerdi={redigerer}
             stillingFør={k.stillingUten(redigerer?.id ?? null)}
             mål={runde.targetScore}
+            tvungenPågår={k.tvungenPågår}
             lukkEtterLagring
             onAvbryt={() => {
               setVisGiv(false);

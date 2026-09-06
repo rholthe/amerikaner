@@ -68,6 +68,28 @@ antall giv. Poeng akkumuleres innenfor runden og nullstilles når en ny runde
 begynner – **runden vinnes ved 52 poeng, av den med flest poeng.** Passerer to
 spillere 52 i samme giv, vinner den høyeste.
 
+**Tvungne giv.** Av og til spilles en runde der alle spillerne etter tur *må*
+klare en melding som er bestemt på forhånd. Med 4 spillere er den **9**. Tallene
+for de andre spillerantallene er skalert i samme forhold som stikkene:
+
+| Spillere | Kort | Stikk | Tvungen melding |
+|---|---|---|---|
+| 3 | 52 + 2 jokere | 18 | 12 |
+| 4 | 52 | 13 | **9** |
+| 5 | 52 + 3 jokere | 11 | 8 |
+| 6 | 52 + 2 jokere | 9 | 6 |
+
+Stikktallene følger av «legg til færrest mulig jokere så kortstokken går opp i
+spillerantallet», som reproduserer begge tallene appen allerede kjente (13 ved 4
+og 11 ved 5). 9 av 13 er 69 % av stikkene, og samme andel gir resten. Dette er
+en **husregel, ikke en spilleregel** – meldingen kan alltid endres i skjemaet,
+og skal et annet tall gjelde fast, er det `TVUNGEN_MELDING` i `lib/scoring.ts`
+som endres.
+
+Poengene er de vanlige: en tvungen giv gir og koster nøyaktig som en frivillig.
+Forskjellen lagres (`Deal.isForced`) fordi den skiller det man våget fra det man
+måtte – snittmeldingen teller derfor bare frivillige meldinger.
+
 **Sier alle pass, stokkes det på nytt.** Ingen får poeng. Slike giv trenger ikke
 registreres, men kan det (`kind = "pass"`) – da får vi vite hvor ofte det skjer,
 og givnummereringen stemmer med det som faktisk ble delt ut.
@@ -139,7 +161,8 @@ Match        id, date, place?, seasonId?, isFinished, createdAt   // kveld
 MatchPlayer  matchId, playerId, seatOrder                          // hvem møtte opp
 Game         id, matchId, gameNo, targetScore(52), winnerId?, isFinished
 Deal         id, gameId, dealNo, kind, bidderId?, partnerId?, bid?, trump?,
-             tricksWon?, trickCount?, isAmerikaner, madeIt?, note?, source
+             tricksWon?, trickCount?, isAmerikaner, isForced, madeIt?, note?,
+             source
 DealScore    dealId, playerId, points, tricks?, role
 Utterance    id, matchId?, gameId?, transcript, actionsJson, model,
              status(pending|confirmed|rejected|edited), createdAt
@@ -283,6 +306,13 @@ forslagskortene sine – uten at noe annet må skrives om.
   der en feilregistrert melding blir oppdaget.
 - **Poengene som lagres står alltid synlig**, og kan overstyres bak «Rett
   poeng». Det som lagres er sannheten.
+- **Tvungen-knappen holder seg selv i gang.** Forvalget er *ikke* tvungen, men
+  registrerer man en tvungen giv, står knappen på til alle rundt bordet har hatt
+  sin – fire giv med fire spillere – og faller så tilbake til av. Skjemaet viser
+  «Tvungen runde · giv 2 av 4 · alle skal melde 9». Tilstanden utledes av
+  `tvungenStatus()` over givene som er lagret, ikke av en knapp som står på:
+  slik overlever den både at siden lastes på nytt og at det er en annen telefon
+  ved bordet som registrerer neste giv.
 - **Runden vinnes ikke automatisk.** Passerer noen 52, kommer en modal midt i
   bildet: den høyeste er forhåndsvalgt, de andre står som alternativ, og knappen
   sier hva den gjør – «Ragnar vant · lagre og start runde 2». Først da settes

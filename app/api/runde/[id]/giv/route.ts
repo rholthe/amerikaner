@@ -42,6 +42,7 @@ export async function POST(req: Request, { params }: Ctx) {
         trickCount,
         tricksWon,
         isAmerikaner: utkast.isAmerikaner,
+        isForced: utkast.kind === "pass" ? false : utkast.isForced,
         madeIt: utkast.kind === "pass" ? null : utkast.madeIt,
         note: body.note?.trim() || null,
         source: body.source === "james" ? "james" : "manuell",

@@ -45,6 +45,7 @@ export function serialiserKveld(m: NonNullable<MedRelasjoner>): KveldDto {
             tricksWon: d.tricksWon,
             trickCount: d.trickCount,
             isAmerikaner: d.isAmerikaner,
+            isForced: d.isForced,
             madeIt: d.madeIt,
             note: d.note,
             source: d.source,

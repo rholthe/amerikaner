@@ -5,6 +5,7 @@ import { Minus, Plus, RotateCcw, SlidersHorizontal } from "lucide-react";
 import {
   beregnGiv,
   stikkForSpillerantall,
+  tvungenMeldingFor,
   validerGiv,
   type GivUtkast,
 } from "@/lib/scoring";
@@ -20,6 +21,9 @@ interface Props {
   /** Stillingen før denne given. Gir «etter given»-linja under skjemaet. */
   stillingFør?: Record<number, number>;
   mål?: number;
+  /** Hvor langt bordet er kommet i en pågående tvungen runde, fra
+   *  `tvungenStatus()`. Null når det ikke pågår en. */
+  tvungenPågår?: { nr: number; av: number } | null;
   onLagre: (body: GivBody) => Promise<void>;
   onAvbryt?: () => void;
   /** Sant når skjemaet står i en modal som lukker seg selv etter lagring. */
@@ -114,13 +118,21 @@ export default function GivSkjema({
   startVerdi,
   stillingFør,
   mål = 52,
+  tvungenPågår = null,
   onLagre,
   onAvbryt,
   lukkEtterLagring = false,
 }: Props) {
+  // En påbegynt tvungen runde skal fortsette uten at noen må huske å trykke:
+  // knappen står på til alle har hatt sin, og faller så tilbake til av.
+  const [tvungen, setTvungen] = useState(
+    startVerdi ? startVerdi.isForced : tvungenPågår !== null,
+  );
   const [melderId, setMelderId] = useState<number | null>(startVerdi?.bidderId ?? null);
   const [makkerId, setMakkerId] = useState<number | null>(startVerdi?.partnerId ?? null);
-  const [melding, setMelding] = useState<number | null>(startVerdi?.bid ?? null);
+  const [melding, setMelding] = useState<number | null>(
+    startVerdi?.bid ?? (tvungenPågår ? tvungenMeldingFor(spillere.length) : null),
+  );
   const [trumf, setTrumf] = useState<string | null>(startVerdi?.trump ?? null);
   const [amerikaner, setAmerikaner] = useState(startVerdi?.isAmerikaner ?? false);
   const [klarte, setKlarte] = useState(startVerdi?.madeIt !== false);
@@ -157,11 +169,12 @@ export default function GivSkjema({
       partnerId: makkerId,
       bid: amerikaner ? null : melding,
       isAmerikaner: amerikaner,
+      isForced: tvungen,
       madeIt: klarte,
       stikk,
       deltakere,
     }),
-    [melderId, makkerId, melding, amerikaner, klarte, stikk, deltakere],
+    [melderId, makkerId, melding, amerikaner, tvungen, klarte, stikk, deltakere],
   );
 
   const beregnet = useMemo(() => beregnGiv(utkast), [utkast]);
@@ -196,10 +209,19 @@ export default function GivSkjema({
   const navn = (id: number) => spillere.find((s) => s.id === id)?.name ?? "?";
   const klar = melderId !== null && (amerikaner || melding !== null);
 
+  const fastMelding = tvungenMeldingFor(deltakere.length);
+  // Teller bare på en ny giv: retter man en gammel tvungen giv, sier statusen
+  // noe om slutten av runden, ikke om den given man står i.
+  const tvungenTeller =
+    tvungen && !startVerdi
+      ? (tvungenPågår ?? { nr: 1, av: spillere.length })
+      : null;
+
   function nullstill() {
     setMelderId(null);
     setMakkerId(null);
     setMelding(null);
+    setTvungen(false);
     setAmerikaner(false);
     setKlarte(true);
     setTrumf(null);
@@ -219,6 +241,7 @@ export default function GivSkjema({
         bid: kind === "pass" || amerikaner ? null : melding,
         trump: kind === "pass" ? null : trumf,
         isAmerikaner: kind === "pass" ? false : amerikaner,
+        isForced: kind === "pass" ? false : tvungen,
         madeIt: klarte,
         trickCount,
         deltakere,
@@ -294,6 +317,13 @@ export default function GivSkjema({
             tittel="Melding"
             hjelp={trickCount ? `${trickCount} stikk i given` : "ukjent antall stikk"}
           >
+            {tvungenTeller && (
+              <p className="mb-2.5 text-sm text-gold-2 bg-gold/10 border border-gold/30 rounded-xl px-3.5 py-2.5">
+                Tvungen runde · giv {tvungenTeller.nr} av {tvungenTeller.av}
+                {fastMelding !== null && <> · alle skal melde {fastMelding}</>}
+              </p>
+            )}
+
             {!amerikaner && (
               <div className="grid grid-cols-7 gap-1.5 mb-2">
                 {Array.from({ length: maksMelding }, (_, i) => i + 1).map((n) => (
@@ -323,11 +353,27 @@ export default function GivSkjema({
                   if (ny) {
                     setMakkerId(null);
                     setMelding(null);
+                    setTvungen(false);
                   }
                   nullstillPoeng();
                 }}
               >
                 Amerikaner · 52
+              </Brikke>
+
+              <Brikke
+                aktiv={tvungen}
+                onClick={() => {
+                  const ny = !tvungen;
+                  setTvungen(ny);
+                  if (ny) {
+                    setAmerikaner(false);
+                    if (fastMelding !== null) setMelding(fastMelding);
+                  }
+                  nullstillPoeng();
+                }}
+              >
+                Tvungen{fastMelding !== null && ` · ${fastMelding}`}
               </Brikke>
 
               <div className="flex gap-1.5 ml-auto">

@@ -173,6 +173,7 @@ export default function RegistrerSide() {
               startVerdi={redigerer}
               stillingFør={k.stillingUten(redigerer?.id ?? null)}
               mål={runde.targetScore}
+              tvungenPågår={k.tvungenPågår}
               onAvbryt={redigerer ? () => setRedigerer(null) : undefined}
               onLagre={async (body) => {
                 if (redigerer) {

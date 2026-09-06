@@ -7,6 +7,7 @@ export interface GivBody {
   bid?: number | null;
   trump?: string | null;
   isAmerikaner?: boolean;
+  isForced?: boolean;
   madeIt?: boolean;
   trickCount?: number | null;
   deltakere?: number[];
@@ -46,6 +47,7 @@ export function tolkGiv(body: GivBody, deltakereIKveld: number[]): TolketGiv {
     partnerId: body.partnerId ?? null,
     bid: body.bid ?? null,
     isAmerikaner: Boolean(body.isAmerikaner),
+    isForced: Boolean(body.isForced),
     madeIt: body.madeIt !== false,
     stikk: tallKart(body.stikk),
     deltakere,

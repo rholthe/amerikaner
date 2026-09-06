@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { useCallback, useMemo, useState } from "react";
 import { api, hentJson } from "@/lib/api";
-import { avgjørRunde, stillinger } from "@/lib/scoring";
+import { avgjørRunde, stillinger, tvungenStatus } from "@/lib/scoring";
 import type { AktivKveldSvar, GivDto, KveldDto } from "@/lib/typer";
 import type { GivBody } from "@/lib/givInput";
 
@@ -55,6 +55,14 @@ export function useKveld() {
         ? avgjørRunde(runde.giv.map((g) => ({ scores: g.scores })), deltakere, runde.targetScore)
         : null,
     [runde, deltakere],
+  );
+
+  /** Pågår det en tvungen runde? Utledes av givene, ikke av en knapp som står
+   *  på – da fortsetter den også når siden lastes på nytt eller når det er en
+   *  annen telefon som registrerer neste giv. */
+  const tvungenPågår = useMemo(
+    () => (runde && kveld ? tvungenStatus(runde.giv, kveld.spillere.length) : null),
+    [runde, kveld],
   );
 
   const runderVunnet = useMemo(() => {
@@ -145,6 +153,7 @@ export function useKveld() {
     runde,
     status,
     runderVunnet,
+    tvungenPågår,
     iMål,
     spørOmVinner,
     utsettAvslutning: () => setAvvistVed(runde?.giv.length ?? 0),

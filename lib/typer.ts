@@ -27,6 +27,7 @@ export interface GivDto {
   tricksWon: number | null;
   trickCount: number | null;
   isAmerikaner: boolean;
+  isForced: boolean;
   madeIt: boolean | null;
   note: string | null;
   source: string;

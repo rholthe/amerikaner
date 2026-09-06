@@ -25,6 +25,8 @@ export interface GivUtkast {
   /** Antall stikk meldt. Valgfri – en giv kan registreres med poeng alene. */
   bid: number | null;
   isAmerikaner: boolean;
+  /** Tvungen giv – meldingen var bestemt på forhånd. Påvirker ikke poengene. */
+  isForced: boolean;
   /** Klarte melder og makker meldingen? */
   madeIt: boolean;
   /** Stikk per motspiller: playerId → antall. */
@@ -103,6 +105,17 @@ export function validerGiv(g: GivUtkast, opts: ValiderOpts): string[] {
 
   if (g.bidderId !== null && !g.isAmerikaner && (g.bid === null || g.bid <= 0)) {
     a.push("Melder er valgt, men melding mangler.");
+  }
+
+  if (g.isForced) {
+    if (g.isAmerikaner) {
+      a.push("Given er merket som tvungen, men meldingen er amerikaner.");
+    } else {
+      const fast = tvungenMeldingFor(n);
+      if (fast !== null && g.bid !== null && g.bid !== fast) {
+        a.push(`Tvungen giv med ${n} spillere er ${fast}, ikke ${g.bid}.`);
+      }
+    }
   }
 
   const motstikk = g.deltakere
@@ -209,8 +222,58 @@ export function justeringsDiff(nåværendeSum: number, ønsketSum: number): numb
 /** Antall stikk i en giv, gitt spillerantallet. Null når vi ikke vet. */
 export function stikkForSpillerantall(n: number): number | null {
   // 4 spillere: 52 kort, 13 hver. 5 spillere: 52 + 3 jokere, 11 hver.
-  // For 3 og 6 varierer husreglene, så vi gjetter ikke.
+  // For 3 og 6 varierer husreglene, så vi gjetter ikke – et gjettet stikktall
+  // her ville gitt falske advarsler på ekte giv.
   if (n === 4) return 13;
   if (n === 5) return 11;
   return null;
+}
+
+// ── Tvungne giv ───────────────────────────────────────────────────────────
+//
+// I en tvungen runde må alle spillerne etter tur klare en melding som er
+// bestemt på forhånd. Med 4 spillere er den 9.
+//
+// Tallene for 3, 5 og 6 er skalert fra de 9 ved 4 spillere, i samme forhold
+// som stikkene: legger man til færrest mulig jokere slik at kortstokken går opp
+// i spillerantallet, får man 18, 13, 11 og 9 stikk – og det reproduserer begge
+// stikktallene appen allerede kjenner (13 ved 4 og 11 ved 5). 9 av 13 er 69 %
+// av stikkene, og samme andel gir tallene under.
+//
+// Dette er en husregel, ikke en spilleregel: meldingen kan alltid endres i
+// skjemaet, og skal et annet tall gjelde fast, er det denne tabellen som endres.
+export const TVUNGEN_MELDING: Record<number, number> = {
+  3: 12,
+  4: 9,
+  5: 8,
+  6: 6,
+};
+
+export function tvungenMeldingFor(antallSpillere: number): number | null {
+  return TVUNGEN_MELDING[antallSpillere] ?? null;
+}
+
+/**
+ * Hvor langt man er kommet i en tvungen runde. Utledes av givene som er lagret,
+ * ikke av en knapp som står på – da overlever den både at siden lastes på nytt
+ * og at noen andre ved bordet registrerer neste giv fra sin egen telefon.
+ *
+ * Returnerer null når det ikke pågår en tvungen runde.
+ */
+export function tvungenStatus(
+  giv: { kind: GivKind | string; isForced: boolean }[],
+  antallSpillere: number,
+): { nr: number; av: number } | null {
+  if (antallSpillere <= 0) return null;
+
+  let påRad = 0;
+  for (let i = giv.length - 1; i >= 0; i--) {
+    if (!giv[i].isForced) break;
+    påRad += 1;
+  }
+
+  // Modulo, ikke bare «< antallSpillere»: går det to tvungne runder rett etter
+  // hverandre, skal telleren begynne på nytt og ikke bli stående på.
+  const igjen = påRad % antallSpillere;
+  return igjen === 0 ? null : { nr: igjen + 1, av: antallSpillere };
 }

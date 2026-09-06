@@ -24,6 +24,7 @@ export function beskrivGiv(g: GivDto, navn: (id: number) => string): string {
   const melder = g.bidderId ? navn(g.bidderId) : "Ukjent melder";
   const makker = g.partnerId ? ` med ${navn(g.partnerId)}` : " alene";
   const trumf = g.trump ? ` ${g.trump}` : "";
+  const tvungen = g.isForced ? " · tvungen" : "";
   const utfall = g.madeIt === false ? "bet" : "klart";
-  return `${melder} meldte ${meldingTekst(g)}${trumf}${makker} · ${utfall}`;
+  return `${melder} meldte ${meldingTekst(g)}${trumf}${makker}${tvungen} · ${utfall}`;
 }

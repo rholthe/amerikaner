@@ -6,6 +6,8 @@ import {
   justeringsDiff,
   stikkForSpillerantall,
   stillinger,
+  tvungenMeldingFor,
+  tvungenStatus,
   validerGiv,
   type GivUtkast,
 } from "./scoring";
@@ -23,6 +25,7 @@ function giv(over: Partial<GivUtkast> = {}): GivUtkast {
     partnerId: MORTEN,
     bid: 9,
     isAmerikaner: false,
+    isForced: false,
     madeIt: true,
     stikk: {},
     deltakere: BORDET,
@@ -214,5 +217,42 @@ describe("stikkForSpillerantall", () => {
     expect(stikkForSpillerantall(5)).toBe(11);
     expect(stikkForSpillerantall(3)).toBeNull();
     expect(stikkForSpillerantall(6)).toBeNull();
+  });
+});
+
+describe("tvungne giv", () => {
+  const tvungen = (isForced: boolean) => ({ kind: "melding" as const, isForced });
+
+  it("har en forhåndsbestemt melding for hvert lovlige spillerantall", () => {
+    // 9 ved 4 spillere er husregelen; resten er skalert i samme forhold som
+    // stikkene. Se kommentaren i scoring.ts.
+    expect(tvungenMeldingFor(3)).toBe(12);
+    expect(tvungenMeldingFor(4)).toBe(9);
+    expect(tvungenMeldingFor(5)).toBe(8);
+    expect(tvungenMeldingFor(6)).toBe(6);
+    expect(tvungenMeldingFor(7)).toBeNull();
+  });
+
+  it("er ikke i gang når ingen tvungen giv er registrert", () => {
+    expect(tvungenStatus([], 4)).toBeNull();
+    expect(tvungenStatus([tvungen(false), tvungen(false)], 4)).toBeNull();
+  });
+
+  it("teller seg gjennom bordet og gir seg når alle har hatt sin", () => {
+    expect(tvungenStatus([tvungen(true)], 4)).toEqual({ nr: 2, av: 4 });
+    expect(tvungenStatus([tvungen(true), tvungen(true)], 4)).toEqual({ nr: 3, av: 4 });
+    expect(tvungenStatus(Array(3).fill(tvungen(true)), 4)).toEqual({ nr: 4, av: 4 });
+    // Fjerde tvungne giv fullfører runden – da skal knappen slå seg av.
+    expect(tvungenStatus(Array(4).fill(tvungen(true)), 4)).toBeNull();
+  });
+
+  it("begynner på nytt når en ny tvungen runde følger rett etter", () => {
+    expect(tvungenStatus(Array(5).fill(tvungen(true)), 4)).toEqual({ nr: 2, av: 4 });
+    expect(tvungenStatus(Array(8).fill(tvungen(true)), 4)).toBeNull();
+  });
+
+  it("teller bare de tvungne givene på slutten av runden", () => {
+    const giv = [tvungen(true), tvungen(true), tvungen(false), tvungen(true)];
+    expect(tvungenStatus(giv, 4)).toEqual({ nr: 2, av: 4 });
   });
 });
