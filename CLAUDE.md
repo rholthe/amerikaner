@@ -31,10 +31,9 @@ Etter prøvekvelden 5. september ble to ting rettet og én ting delt i to:
   som en serverside trenger, skal bo i en komponentfil.**
 - **Én skjerm ble til to**, se `/kveld` og `/registrer` under.
 
-**Fase 2 er langt på vei:** sesonger med egen sesongside (`lib/sesong.ts`) og
-spillerprofiler med makkermatrise (`lib/spiller.ts`) står. Det som gjenstår er
-grafene på `/oversikt` og merker. CSV-eksport er droppet.
-**Fase 3 (James) er ikke påbegynt.**
+**Fase 2 er ferdig.** Sesonger (`lib/sesong.ts`), spillerprofiler med
+makkermatrise og merker (`lib/spiller.ts`, `lib/merker.ts`) og `/oversikt` med
+grafer står. CSV-eksport er droppet. **Fase 3 (James) er ikke påbegynt.**
 
 Koden ligger på **`git@github.com:rholthe/amerikaner.git`**, gren `main`.
 Serveren er en ren kopi av GitHub – man redigerer aldri filer der.
@@ -139,7 +138,11 @@ Samme stack som `pokergutta`, fordi delene vi trenger allerede finnes der og i
   `npx prisma db push && npx prisma generate` sammen etter enhver
   skjemaendring.
 - **SWR-polling (3 s)** for live-synk mellom storskjerm og mobiler.
-- **Recharts 3** for grafer, **lucide-react** for ikoner.
+- **Grafer i ren SVG** (`components/Linjediagram.tsx`), ikke Recharts. To
+  linjediagrammer trenger ikke 100 kB javascript, og egen SVG gir full kontroll
+  på markspesifikasjonene: 2 px linjer, hårfine heltrukne hjelpelinjer, 9 px
+  endepunkt med 2 px ring i flatefargen, sikte og verktøytips på peker *og*
+  piltaster. **lucide-react** for ikoner.
 - **Soniox** (`@soniox/speech-to-text-web`) for sanntidstranskripsjon.
 - **Claude via AWS Bedrock** (`@anthropic-ai/bedrock-sdk`) for tolkning av tale
   til handlinger.
@@ -228,8 +231,7 @@ for å forbedre promptet; kan tømmes fritt (se personvern).
 | `/kveld/[id]` | Én spilt kveld: runder, giv og kveldens kåringer |
 | `/sesong/[id]` | **Sesongside** – tabell, kåringer, alle kvelder og runder |
 | `/sesonger` | Administrer sesonger (PIN-beskyttet) |
-| `/oversikt` | Kveldshistorikk og grafer |
-| `/oversikt?visning=graf` | Grafer: akkumulerte runder, formkurve, makkermatrise |
+| `/oversikt` | **Grafer og kveldshistorikk**, med sesongfilter (åpen) |
 | `/sesong/[id]` | Sesongkåring – mester, pallen, kåringer |
 | `/spillere/[id]` | **Spillerprofil**: karrieretall, rekorder, makkermatrise (åpen) |
 | `/spillere` | Administrer spillere (aktiv/inaktiv, nytt navn) |
@@ -576,8 +578,7 @@ retningen betyr noe: å rope noen er et valg, å bli ropt er det ikke – `3:4` 
 `4:3` er to forskjellige tall. Cellen viser *klart av ganger ropt*, og bakgrunnen
 er grønnere jo oftere paret kom i mål. De tomme rutene er halve poenget.
 
-**Fase 2 mangler fortsatt:** formkurve og grafer på `/oversikt`, og merker.
-Sesongtabell, kåringer per sesong og spillerprofiler står.
+**Fase 2 er ferdig.** Alt regnes fra `Deal` og `DealScore`; ingenting lagres.
 
 ---
 
@@ -723,6 +724,14 @@ e-post ved feil. Prøvekjørt og verifisert.
   `--surface`, `--surface-2`, `--surface-3`), som er WCAG AA for brødtekst. Den
   første paletten lå på 3.4–4.1 for `--muted` og `--bad` – nettopp de to som
   brukes til seksjonsetiketter og minuspoeng. Endrer du en verdi, mål på nytt.
+- **Paletten er målt med en validator, ikke vurdert på øyemål.** Kjørt mot mørk
+  flate gir den to funn som styrer hvordan diagrammene er bygget: gull og grønn
+  (plass 3 og 4) ligger på ΔE 6.9 for protanopi, som er lovlig *kun* med
+  sekundærkoding – derfor har hver linje navnet sitt ved enden, en
+  tegnforklaring, og en tabell med de samme tallene under. Rød og magenta
+  (plass 6 og 7) ligger på ΔE 7.8 for normalt syn, som er en hard stryk; den
+  slår først inn ved sju registrerte spillere, og bør løses ved å bytte plass 7
+  om det blir aktuelt. Rekkefølgen røres ikke uten å måle på nytt.
 - **Spillerfargene lysnes når de brukes som tekst.** Paletten er laget for
   flater; den mørkeste (grønn `#008300`) faller til 3.6:1 som tekst på et kort.
   `spillerFarge()` gir fargen til søyler og fyll, `spillerTekstFarge()` blander
@@ -800,9 +809,10 @@ Appen står på https://am.pokergutta.no og kan brukes på neste spillekveld.
 12. ✅ `/sesong/[id]`: sesongtabell på vunne runder, kåringer, alle kvelder og
     runder. Sesongene listes på forsiden, og kvelden lenker til sesongen sin.
 13. ✅ Spillerprofiler `/spillere/[id]`: karrieretall, meldingsstatistikk,
-    rekorder, sesong for sesong, makkermatrise og alle kvelder med plassering.
-14. `/oversikt` med grafer: formkurve og akkumulerte vunne runder.
-15. Merker/achievements etter mønsteret i `pokergutta/lib/achievements.ts`.
+    rekorder, sesong for sesong, makkermatrise, merker og alle kvelder.
+14. ✅ `/oversikt`: akkumulerte vunne runder og formkurve, med sesongfilter og
+    en tabell som viser de samme tallene.
+15. ✅ Merker i `lib/merker.ts`.
 
 CSV-eksport er **droppet** – ingen har bruk for tallene utenfor appen.
 

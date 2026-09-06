@@ -6,6 +6,7 @@ import { formatDato } from "@/lib/dates";
 import { hentSpillerProfil } from "@/lib/spiller";
 import { spillerFarge, spillerTekstFarge } from "@/lib/palette";
 import Makkermatrise from "@/components/Makkermatrise";
+import { merkerFor } from "@/lib/merker";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,13 @@ export default async function SpillerProfil({ params }: { params: Promise<{ id: 
   const farge = spillerTekstFarge(id, alleIder);
   const s = profil.stat;
   const matrise = [...profil.medspillere].sort((a, b) => a.id - b.id);
+  const merker = merkerFor({
+    stat: s,
+    kvelder: profil.kvelder,
+    kveldsseire: profil.kveldsseire,
+    seiersrekke: profil.seiersrekke,
+  });
+  const oppnådd = merker.filter((m) => m.oppnådd);
 
   return (
     <main className="min-h-dvh p-5 sm:p-8 max-w-3xl mx-auto">
@@ -200,6 +208,37 @@ export default async function SpillerProfil({ params }: { params: Promise<{ id: 
               </ul>
             </section>
           )}
+
+          <section className="mb-10">
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="merkelapp">Merker</h2>
+              <span className="merkelapp tabular-nums">
+                {oppnådd.length} av {merker.length}
+              </span>
+            </div>
+            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {merker.map((m) => (
+                <li
+                  key={m.nøkkel}
+                  className={`kort px-3.5 py-3 ${m.oppnådd ? "" : "opacity-45"}`}
+                  style={m.oppnådd ? { borderColor: "var(--gold)" } : undefined}
+                >
+                  <div className="flex items-baseline gap-2">
+                    <span aria-hidden className="text-xl leading-none">
+                      {m.emoji}
+                    </span>
+                    <span className="font-semibold text-sm truncate">{m.navn}</span>
+                  </div>
+                  <p className="text-xs text-muted mt-1">{m.krav}</p>
+                  {!m.oppnådd && m.framgang && m.framgang.mål > 1 && (
+                    <p className="text-xs text-muted tabular-nums mt-1">
+                      {m.framgang.nå} av {m.framgang.mål}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
 
           <section className="mb-10">
             <h2 className="merkelapp mb-3">Makkermatrise</h2>

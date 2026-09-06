@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarRange, ChevronRight, Monitor, Smartphone, Trophy, Users } from "lucide-react";
+import { CalendarRange, ChartLine, ChevronRight, Monitor, Smartphone, Trophy, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatDato } from "@/lib/dates";
 import { stillinger } from "@/lib/scoring";
@@ -74,7 +74,14 @@ export default async function Forside() {
         </Link>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 mb-12">
+      <div className="grid gap-3 sm:grid-cols-3 mb-12">
+        <Link
+          href="/oversikt"
+          className="kort flex items-center gap-3 px-5 py-4 hover:bg-surface-2 transition"
+        >
+          <ChartLine size={18} className="text-ink-2" />
+          <span className="font-medium">Oversikt</span>
+        </Link>
         <Link
           href="/spillere"
           className="kort flex items-center gap-3 px-5 py-4 hover:bg-surface-2 transition"

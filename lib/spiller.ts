@@ -33,6 +33,8 @@ export interface SpillerProfil {
   stat: SpillerStat;
   kvelder: number;
   kveldsseire: number;
+  /** Lengste rekke med kvelder på rad der man vant minst én runde. */
+  seiersrekke: number;
   /** Alle som har vært med på en kveld sammen med spilleren. */
   medspillere: { id: number; name: string }[];
   par: MatriseRad[];
@@ -123,6 +125,14 @@ export async function hentSpillerProfil(id: number): Promise<SpillerProfil | nul
     };
   });
 
+  // siste[] er nyeste først; rekka telles kronologisk.
+  let rekke = 0;
+  let lengsteRekke = 0;
+  for (const k of [...siste].reverse()) {
+    rekke = k.runderVunnet > 0 ? rekke + 1 : 0;
+    lengsteRekke = Math.max(lengsteRekke, rekke);
+  }
+
   return {
     id: spiller.id,
     name: spiller.name,
@@ -131,6 +141,7 @@ export async function hentSpillerProfil(id: number): Promise<SpillerProfil | nul
     stat,
     kvelder: kvelder.length,
     kveldsseire,
+    seiersrekke: lengsteRekke,
     medspillere: [...medspillere].map(([mid, name]) => ({ id: mid, name })),
     par,
     sesonger: [...sesongSum.values()],

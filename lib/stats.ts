@@ -41,6 +41,9 @@ export interface SpillerStat {
   meldingSum: number;
   meldingerMedTall: number;
   meldtAlene: number;
+  meldtAleneKlart: number;
+  /** Høyeste tallmelding man selv har klart. Grunnlaget for «Den dristige». */
+  høyesteKlarte: number;
   poengSomMelder: number;
 
   /** Ganger spilleren ble ropt som makker. */
@@ -77,6 +80,8 @@ export function tomStat(playerId: number): SpillerStat {
     meldingSum: 0,
     meldingerMedTall: 0,
     meldtAlene: 0,
+    meldtAleneKlart: 0,
+    høyesteKlarte: 0,
     poengSomMelder: 0,
     makkerGanger: 0,
     makkerKlart: 0,
@@ -137,7 +142,13 @@ export function spillerStatistikk(
         s.poengSomMelder += sc.points;
         if (klart) s.meldingerKlart += 1;
         else s.meldingerBet += 1;
-        if (g.partnerId == null) s.meldtAlene += 1;
+        if (g.partnerId == null) {
+          s.meldtAlene += 1;
+          if (klart) s.meldtAleneKlart += 1;
+        }
+        if (klart && !g.isAmerikaner && g.bid != null) {
+          s.høyesteKlarte = Math.max(s.høyesteKlarte, g.bid);
+        }
         if (g.isForced) {
           s.tvungne += 1;
           if (klart) s.tvungneKlart += 1;
