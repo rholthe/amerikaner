@@ -1,0 +1,15 @@
+node_modules/
+.next/
+app/generated/
+*.tsbuildinfo
+next-env.d.ts
+.env
+data/*
+!data/.gitkeep
+backups/
+
+# Rot som npm og next legger igjen når de kjøres i en container med HOME=/app
+.cache/
+.config/
+.npm/
+*.log

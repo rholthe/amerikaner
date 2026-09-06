@@ -1,0 +1,136 @@
+// Datamodellen speiler de tre nivåene i spillet: kveld → runde → giv.
+// Se CLAUDE.md kapittel 1 og 3. Kort oppsummert:
+//   Match = én spillekveld, Game = én runde til 52 poeng, Deal = én giv.
+// Sannhetskilden for poeng er DealScore. Stillingen lagres aldri – den summeres.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Season {
+  id        Int      @id @default(autoincrement())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  matches Match[]
+}
+
+model Player {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  nickname  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  matchPlayers MatchPlayer[]
+  dealScores   DealScore[]
+  bidderDeals  Deal[]        @relation("Melder")
+  partnerDeals Deal[]        @relation("Makker")
+  gamesWon     Game[]        @relation("RundeVinner")
+}
+
+/// Én spillekveld.
+model Match {
+  id         Int      @id @default(autoincrement())
+  seasonId   Int?
+  date       DateTime
+  place      String   @default("")
+  isFinished Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  season  Season?       @relation(fields: [seasonId], references: [id])
+  players MatchPlayer[]
+  games   Game[]
+}
+
+/// Hvem som møtte opp. Hvem som faktisk spilte den enkelte given står i DealScore.
+model MatchPlayer {
+  matchId   Int
+  playerId  Int
+  seatOrder Int
+
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@id([matchId, playerId])
+}
+
+/// Én runde – spilles til targetScore (52). winnerId settes kun ved manuell
+/// bekreftelse via /api/runde/[id]/avslutt, aldri automatisk.
+model Game {
+  id          Int      @id @default(autoincrement())
+  matchId     Int
+  gameNo      Int
+  targetScore Int      @default(52)
+  winnerId    Int?
+  isFinished  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  match  Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  winner Player? @relation("RundeVinner", fields: [winnerId], references: [id])
+  deals  Deal[]
+
+  @@unique([matchId, gameNo])
+}
+
+/// Én giv. kind:
+///   "melding"   – vanlig giv med melder, makker og stikk
+///   "pass"      – alle passet, stokket om. Ingen DealScore-rader.
+///   "justering" – korreksjon av stillingen. Én DealScore med differansen.
+model Deal {
+  id           Int      @id @default(autoincrement())
+  gameId       Int
+  dealNo       Int
+  kind         String   @default("melding")
+  bidderId     Int?
+  partnerId    Int?
+  bid          Int?
+  trump        String?
+  tricksWon    Int?
+  trickCount   Int?
+  isAmerikaner Boolean  @default(false)
+  madeIt       Boolean?
+  note         String?
+  source       String   @default("manuell")
+  createdAt    DateTime @default(now())
+
+  game    Game        @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  bidder  Player?     @relation("Melder", fields: [bidderId], references: [id])
+  partner Player?     @relation("Makker", fields: [partnerId], references: [id])
+  scores  DealScore[]
+
+  @@unique([gameId, dealNo])
+}
+
+model DealScore {
+  dealId   Int
+  playerId Int
+  points   Int
+  tricks   Int?
+  role     String @default("motspiller")
+
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@id([dealId, playerId])
+}
+
+/// Logg over hva James hørte og foreslo. Tas i bruk i fase 3.
+model Utterance {
+  id          Int      @id @default(autoincrement())
+  matchId     Int?
+  gameId      Int?
+  transcript  String
+  actionsJson String
+  model       String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}

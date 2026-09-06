@@ -1,0 +1,31 @@
+services:
+  amerikaner:
+    build: .
+    container_name: amerikaner
+    restart: unless-stopped
+    # Se Dockerfile: uid 1000 slik at det bind-monterte data/ eies av ragnar.
+    user: "1000:1000"
+    env_file:
+      - .env
+    environment:
+      - TZ=Europe/Oslo
+    volumes:
+      # Katalog, ikke enkeltfil: SQLite legger -wal og -shm ved siden av basen.
+      - ./data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/pin').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    name: reverse-proxy_default
+    external: true
