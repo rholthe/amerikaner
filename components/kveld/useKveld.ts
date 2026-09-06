@@ -27,7 +27,7 @@ export function useKveld() {
   const spillere = useMemo(() => data?.spillere ?? [], [data]);
 
   const skriv = useCallback(
-    async (fn: () => Promise<KveldDto>) => {
+    async (fn: () => Promise<KveldDto | null>) => {
       setFeil(null);
       try {
         const ny = await fn();
@@ -123,9 +123,10 @@ export function useKveld() {
     setAvvistVed(null);
   };
 
+  // Svaret er null når kvelden ble tom og dermed slettet i samme slengen.
   const avsluttKveld = async () => {
     if (!kveld) return;
-    await skriv(() => api.post<KveldDto>(`/api/kveld/${kveld.id}/avslutt`));
+    await skriv(() => api.post<KveldDto | null>(`/api/kveld/${kveld.id}/avslutt`));
   };
 
   return {

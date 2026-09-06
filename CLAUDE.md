@@ -301,7 +301,9 @@ forslagskortene sine – uten at noe annet må skrives om.
   kunne slette kvelden ved et uhell. Er det den siste runden, slettes kvelden
   med – en kveld uten runder er ikke en tilstand noen skjerm skal måtte tegne,
   og den ville blitt liggende i historikken som en tom rad ingen kan fjerne.
-  Resten av rundene renummereres, slik givene også gjør.
+  Resten av rundene renummereres, slik givene også gjør. Samme regel gjelder
+  «Avslutt kvelden»: ble det aldri registrert en eneste giv, forsvinner kvelden
+  i stedet for å legge seg i historikken som en tom rad.
 - **Wake Lock** holder skjermen våken så lenge en kveld er aktiv.
 - Menyen (`⋯`) har lenke til den andre skjermen, til spilleradministrasjon, og
   «Avslutt kvelden» bak en bekreftelse.
@@ -457,7 +459,7 @@ Alt under `/api/kveld`, `/api/runde` og `/api/spillere` er PIN-beskyttet av
 | 1 | GET | `/api/kveld/aktiv` | Aktiv kveld, spillere, runder, giv (SWR) |
 | 1 | POST | `/api/kveld` | Start ny kveld |
 | 1 | POST | `/api/kveld/[id]/runde` | Start ny runde (idempotent) |
-| 1 | POST | `/api/kveld/[id]/avslutt` | Avslutt kvelden |
+| 1 | POST | `/api/kveld/[id]/avslutt` | Avslutt kvelden. Ble den tom, slettes den, og svaret er `null` |
 | 1 | POST | `/api/runde/[id]/giv` | Lagre giv |
 | 1 | PUT | `/api/runde/[id]/giv/[nr]` | Rett en giv |
 | 1 | DELETE | `/api/runde/[id]/giv/[nr]` | Slett en giv, renummerer resten |
