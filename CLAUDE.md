@@ -225,18 +225,31 @@ for å forbedre promptet; kan tømmes fritt (se personvern).
 | `/registrer` | **Mobilvisning** – hovedveien inn med data (PIN-beskyttet) |
 | `/kveld` | **Storskjermvisning** – tavle, giv og kåringer (PIN-beskyttet) |
 | `/kveld/[id]` | Én spilt kveld: runder, giv og kveldens kåringer |
-| `/oversikt` | Sesongtabell, kveldshistorikk, CSV-eksport |
+| `/sesong/[id]` | **Sesongside** – tabell, kåringer, alle kvelder og runder |
+| `/sesonger` | Administrer sesonger (PIN-beskyttet) |
+| `/oversikt` | Kveldshistorikk og CSV-eksport |
 | `/oversikt?visning=graf` | Grafer: akkumulerte runder, formkurve, makkermatrise |
 | `/sesong/[id]` | Sesongkåring – mester, pallen, kåringer |
 | `/spillere/[id]` | Spillerprofil: karrieretall, rekorder, merker |
 | `/spillere` | Administrer spillere (aktiv/inaktiv, nytt navn) |
 
 **Sesonger fungerer som i pokergutta:** `Season` med start- og sluttdato,
-`isActive` for inneværende, Hall of Fame på forsiden og en egen kåringsside per
-sesong. Sesongtabellen rangeres på **antall vunne runder**, med totale poeng
-gjennom sesongen som skillekriterium – runden er tross alt spillets naturlige
-seiersenhet, og en kveld med mange korte runder skal ikke telle mindre enn en
-kveld med få lange.
+`isActive` for inneværende, og en egen side per sesong. Sesongtabellen rangeres
+på **antall vunne runder**, med totale poeng gjennom sesongen som
+skillekriterium – runden er tross alt spillets naturlige seiersenhet, og en
+kveld med mange korte runder skal ikke telle mindre enn en kveld med få lange.
+
+**En sesong er et datointervall, og kveldene finner sesongen sin selv.**
+`Match.seasonId` lagres, men regnes ut på nytt (`tildelKvelder()` i
+`lib/sesong.ts`) hver gang en sesong opprettes eller får nye datoer: kvelder i
+perioden knyttes til den, og kvelder som faller utenfor slippes fri igjen.
+Alternativet – å knytte kvelden til «den aktive sesongen» én gang for alle –
+ville betydd at en rettet sluttdato lot kvelder bli liggende i feil sesong, og
+at kvelder spilt før sesongen ble opprettet aldri kom med. En kveld som blir
+registrert mens en sesong dekker datoen, havner i den med det samme.
+
+Sesonger skal ikke overlappe. Gjør de det, beholder den første sine kvelder –
+`tildelKvelder()` tar bare kvelder som står uten sesong fra før.
 
 ### To skjermer, én sannhet
 
@@ -500,6 +513,8 @@ Alt under `/api/kveld`, `/api/runde` og `/api/spillere` er PIN-beskyttet av
 | 1 | PATCH | `/api/spillere/[id]` | Nytt navn eller aktiv/inaktiv |
 | 1 | DELETE | `/api/spillere/[id]` | `409` hvis spilleren har spilt giv |
 | 1 | GET | `/api/statistikk` | Karrieretall for alle spillere (åpen, lesende) |
+| 2 | GET/POST | `/api/sesonger` | Liste og opprett sesong |
+| 2 | PATCH/DELETE | `/api/sesonger/[id]` | Endre datoer/navn/aktiv, eller slett |
 | 2 | GET | `/api/eksport/[seasonId]` | CSV, norsk Excel-format |
 | 3 | GET | `/api/soniox-token` | Kortlivet Soniox-token + EU-ws-URL |
 | 3 | POST | `/api/james` | `{transcript, matchId}` → liste med forslag |
@@ -774,14 +789,17 @@ e-post ved feil. Prøvekjørt og verifisert.
 
 Appen står på https://am.pokergutta.no og kan brukes på neste spillekveld.
 
-**Fase 2 – Sesonger og grafer — ikke påbegynt**
-11. `Season`-administrasjon, sesongtabell på vunne runder, CSV-eksport.
-12. `/oversikt` med kveldshistorikk og grafer.
-13. Spillerprofiler: formkurve, makkermatrise (`makkerPar()` finnes), merker.
-14. `/sesong/[id]` kåringsside og Hall of Fame på forsiden.
+**Fase 2 – Sesonger og grafer — påbegynt**
+11. ✅ `Season`-administrasjon på `/sesonger`, med automatisk tilhørighet.
+12. ✅ `/sesong/[id]`: sesongtabell på vunne runder, kåringer, alle kvelder og
+    runder. Sesongene listes på forsiden, og kvelden lenker til sesongen sin.
+13. CSV-eksport.
+14. `/oversikt` med grafer: formkurve og akkumulerte vunne runder.
+15. Spillerprofiler `/spillere/[id]`: makkermatrise (`makkerPar()` finnes),
+    rekorder og merker.
 
-Kåringene i `lib/stats.ts` dekker allerede det meste av tallene – det som
-mangler er å gi dem en filtrert liste giv, og å tegne grafene.
+Kåringene i `lib/stats.ts` dekker allerede tallene – det som mangler er
+grafene og spillerprofilene.
 
 **Fase 3 – James — ikke påbegynt**
 15. `/api/soniox-token`, mikrofonvelger med nivåmeter, trykk-for-å-snakke.

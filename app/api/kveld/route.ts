@@ -34,10 +34,20 @@ export async function POST(req: Request) {
 
   // Kveld og første runde opprettes sammen – en kveld uten runde er en tilstand
   // ingen skjerm skal måtte tegne.
+  const dato = date ? new Date(date) : veggklokkeSomUtc();
+
+  // Kvelden havner i sesongen som dekker datoen. Finnes ingen, står den uten –
+  // og kommer inn igjen av seg selv når en sesong opprettes rundt den.
+  const sesong = await prisma.season.findFirst({
+    where: { startDate: { lte: dato }, endDate: { gte: dato } },
+    orderBy: { isActive: "desc" },
+  });
+
   const kveld = await prisma.$transaction(async (tx) => {
     const m = await tx.match.create({
       data: {
-        date: date ? new Date(date) : veggklokkeSomUtc(),
+        seasonId: sesong?.id ?? null,
+        date: dato,
         place: (place ?? "").trim(),
         players: {
           create: ider.map((playerId, i) => ({ playerId, seatOrder: i })),

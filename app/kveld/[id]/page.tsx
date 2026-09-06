@@ -21,11 +21,13 @@ export default async function KveldHistorikk({
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
 
-  const [kveld, alle] = await Promise.all([
+  const [kveld, alle, rad] = await Promise.all([
     hentKveld(id),
     prisma.player.findMany({ select: { id: true }, orderBy: { id: "asc" } }),
+    prisma.match.findUnique({ where: { id }, include: { season: true } }),
   ]);
   if (!kveld) notFound();
+  const sesong = rad?.season ?? null;
 
   const alleIder = alle.map((p) => p.id);
   const deltakere = kveld.spillere.map((s) => s.id);
@@ -65,6 +67,14 @@ export default async function KveldHistorikk({
           </span>
         )}
       </header>
+      {sesong && (
+        <Link
+          href={`/sesong/${sesong.id}`}
+          className="inline-flex items-center gap-1.5 text-sm text-gold hover:text-gold-2 mb-2"
+        >
+          <Trophy size={14} /> {sesong.name}
+        </Link>
+      )}
       <p className="text-ink-2 mb-8">
         {kveld.spillere.map((s) => s.name).join(", ")}
         {kveld.place && ` · ${kveld.place}`} ·{" "}

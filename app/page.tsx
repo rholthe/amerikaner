@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Monitor, Smartphone, Users } from "lucide-react";
+import { CalendarRange, ChevronRight, Monitor, Smartphone, Trophy, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatDato } from "@/lib/dates";
 import { stillinger } from "@/lib/scoring";
 import { kåringer } from "@/lib/stats";
 import { hentTotalStatistikk } from "@/lib/statsDb";
+import { hentSesonger } from "@/lib/sesong";
 import { spillerFarge } from "@/lib/palette";
 import Statistikk from "@/components/kveld/Statistikk";
 
@@ -28,6 +29,9 @@ export default async function Forside() {
     }),
     hentTotalStatistikk(),
   ]);
+
+  const sesonger = await hentSesonger();
+  const aktivSesong = sesonger.find((s) => s.isActive) ?? null;
 
   const alleIder = total.spillere.map((s) => s.id);
   const kår = kåringer(total.stat);
@@ -70,16 +74,57 @@ export default async function Forside() {
         </Link>
       </div>
 
-      <Link
-        href="/spillere"
-        className="kort flex items-center gap-3 px-5 py-4 mb-12 hover:bg-surface-2 transition"
-      >
-        <Users size={18} className="text-ink-2" />
-        <span className="font-medium">Spillere</span>
-        <span className="text-sm text-ink-2 ml-auto">
-          {total.spillere.length} registrert
-        </span>
-      </Link>
+      <div className="grid gap-3 sm:grid-cols-2 mb-12">
+        <Link
+          href="/spillere"
+          className="kort flex items-center gap-3 px-5 py-4 hover:bg-surface-2 transition"
+        >
+          <Users size={18} className="text-ink-2" />
+          <span className="font-medium">Spillere</span>
+          <span className="text-sm text-ink-2 ml-auto">{total.spillere.length}</span>
+        </Link>
+        <Link
+          href="/sesonger"
+          className="kort flex items-center gap-3 px-5 py-4 hover:bg-surface-2 transition"
+        >
+          <CalendarRange size={18} className="text-ink-2" />
+          <span className="font-medium">Sesonger</span>
+          <span className="text-sm text-ink-2 ml-auto">{sesonger.length}</span>
+        </Link>
+      </div>
+
+      {sesonger.length > 0 && (
+        <section className="mb-12">
+          <h2 className="merkelapp mb-3">
+            {aktivSesong ? "Sesongen som pågår" : "Sesonger"}
+          </h2>
+          <ul className="space-y-2">
+            {sesonger.map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/sesong/${s.id}`}
+                  className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition ${
+                    s.isActive
+                      ? "border-gold/50 bg-gold/10 hover:bg-gold/15"
+                      : "border-line bg-surface hover:bg-surface-2"
+                  }`}
+                >
+                  <Trophy size={17} className={s.isActive ? "text-gold" : "text-muted"} />
+                  <span className="font-semibold">{s.name}</span>
+                  {s.isActive && (
+                    <span className="text-xs text-gold">pågår</span>
+                  )}
+                  <span className="ml-auto text-xs text-muted tabular-nums">
+                    {s.kvelder} {s.kvelder === 1 ? "kveld" : "kvelder"} · {s.runder}{" "}
+                    {s.runder === 1 ? "runde" : "runder"}
+                  </span>
+                  <ChevronRight size={16} className="text-muted" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {kår.length > 0 && (
         <section className="mb-12">

@@ -33,8 +33,10 @@ export const config = {
     "/kveld/:path*",
     "/registrer/:path*",
     "/spillere/:path*",
+    "/sesonger/:path*",
     "/api/kveld/:path*",
     "/api/runde/:path*",
     "/api/spillere/:path*",
+    "/api/sesonger/:path*",
   ],
 };

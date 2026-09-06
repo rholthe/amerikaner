@@ -51,7 +51,9 @@ export default function Statistikk({
 
             <div className="flex items-baseline justify-between gap-2">
               <span
-                className={`font-semibold truncate ${stor ? "text-xl" : "text-base"}`}
+                className={`font-semibold ${delt.length > 1 ? "min-w-0" : "truncate"} ${
+                  stor ? "text-xl" : "text-base"
+                }`}
                 style={
                   delt.length > 1
                     ? undefined
